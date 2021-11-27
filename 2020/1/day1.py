@@ -7,7 +7,7 @@ numbers = []
 number_re = re.compile('^\d+$')
 
 for line in sys.stdin:
-    if re.match(number_re, line):
+    if number_re.match(line):
         numbers.append(int(line))
 
 for i, a in enumerate(numbers):

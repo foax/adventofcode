@@ -23,10 +23,17 @@ def decode_seat_line(line):
     return row[0] * cols + col[0]
 
 
-max_id = 0
+seat_ids = []
 for line in sys.stdin:
     seat_id = decode_seat_line(line.rstrip())
-    if seat_id > max_id:
-        max_id = seat_id
+    seat_ids.append(seat_id)
 
-print(f'Max seat ID: {max_id}')
+seat_ids.sort()
+print(f'Max seat ID: {seat_ids[-1]}')
+
+last_seat = seat_ids[0]
+for seat in seat_ids[1:]:
+    if seat != last_seat + 1:
+        print(f'Found free seat: {seat - 1}')
+        break
+    last_seat = seat

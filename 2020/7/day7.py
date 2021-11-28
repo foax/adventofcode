@@ -55,12 +55,25 @@ class Bag:
 
         return already_found_set
 
+    def count_containing_bags(self):
+        total = 0
+
+        for b, count in self.contains.items():
+            # print(f'Self: {self}; Contains Bag: {b}; Count: {count}')
+            c = b.count_containing_bags()
+            # print(
+            #   f'Bag: {b}; Containing bag count: {c}; number of bags: {count}')
+            total += count * b.count_containing_bags() + count
+
+        # print(f'Total: {total}')
+        return total
+
 
 for line in sys.stdin:
     match = re.match('(.+) bags contain (.+).', line.rstrip())
     colour, contents = match.group(1, 2)
     contents = contents.split(', ')
-    print(f'colour: {colour}; contents: {contents}')
+    # print(f'colour: {colour}; contents: {contents}')
     outer_bag = None
     if Bag.bag_exists(colour):
         outer_bag = Bag.get_bag_by_colour(colour)
@@ -75,16 +88,14 @@ for line in sys.stdin:
         if not Bag.bag_exists(colour):
             new_bag = Bag(colour)
         inner_bag = Bag.get_bag_by_colour(colour)
-        outer_bag.set_contains(inner_bag, count)
+        outer_bag.set_contains(inner_bag, int(count))
         inner_bag.set_contained_in(outer_bag)
-
-for bag_name, bag in Bag.get_all_bags().items():
-    print(bag_name)
 
 outer_bag_count = 0
 shiny_gold = Bag.get_bag_by_colour('shiny gold')
 shiny_gold_outer_bags = shiny_gold.get_outer_most_bags()
-for b in shiny_gold_outer_bags:
-    print(f'Outer bag: {b}')
 
 print(f'Number of outer bags for shiny gold: {len(shiny_gold_outer_bags)}')
+
+print(
+    f'Number of inner bags for shiny gold: {shiny_gold.count_containing_bags()}')

@@ -11,13 +11,6 @@ def is_sum_of_pair(num, num_list):
     return False
 
 
-def sum_list(l):
-    answer = 0
-    for x in l:
-        answer += x
-    return answer
-
-
 numbers = []
 for line in sys.stdin:
     numbers.append(int(line.rstrip()))

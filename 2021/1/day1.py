@@ -3,42 +3,22 @@
 import sys
 
 
-def part_1(numbers):
-    increases = 0
-    for i, x in enumerate(numbers):
-        if i == 0:
-            continue
-        y = numbers[i - 1]
-        if x > y:
-            increases += 1
+def count_increases(numbers):
+    '''Counts the number of times a list of integers increases.'''
 
-    print(f'Part 1: Increases: {increases}')
+    increases = [1 for (x, y) in zip(numbers[0:-1], numbers[1:]) if y > x]
+    return sum(increases)
 
 
 def part_2(numbers):
-    increases = 0
-    last_sum = 0
-
-    for i, x in enumerate(numbers):
-        if i < 2:
-            continue
-
-        y = numbers[i - 1]
-        z = numbers[i - 2]
-        window_sum = x + y + z
-
-        if last_sum > 0 and window_sum > last_sum:
-            increases += 1
-
-        last_sum = window_sum
-
-    print(f'Part 2: Increases: {increases}')
+    sums = [sum(x) for x in zip(numbers[0:-2], numbers[1:-1], numbers[2:])]
+    return count_increases(sums)
 
 
 def main():
     numbers = [int(x.rstrip()) for x in sys.stdin.readlines()]
-    part_1(numbers)
-    part_2(numbers)
+    answers = (count_increases(numbers), part_2(numbers))
+    print(f'Part 1: {answers[0]}; Part 2: {answers[1]}')
 
 
 if __name__ == "__main__":

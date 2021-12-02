@@ -8,15 +8,17 @@ class Sub:
     def __init__(self):
         self.depth = 0
         self.position = 0
+        self.aim = 0
 
     def forward(self, amount):
         self.position += amount
+        self.depth += self.aim * amount
 
     def down(self, amount):
-        self.depth += amount
+        self.aim += amount
 
     def up(self, amount):
-        self.depth -= amount
+        self.aim -= amount
 
     def get_depth(self):
         return self.depth

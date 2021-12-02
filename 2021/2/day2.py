@@ -4,14 +4,33 @@ import sys
 
 
 class Sub:
+    '''Your run of the mill submarine.'''
 
-    def __init__(self):
+    def __init__(self, name):
+        self.name = name
         self.depth = 0
         self.position = 0
         self.aim = 0
 
     def forward(self, amount):
         self.position += amount
+
+    def down(self, amount):
+        self.depth += amount
+
+    def up(self, amount):
+        self.depth -= amount
+
+
+class Collins(Sub):
+    '''Cutting edge technology, for its day. Now supports aiming.'''
+
+    def __init__(self, name):
+        super().__init__(name)
+        self.aim = 0
+
+    def forward(self, amount):
+        super().forward(amount)
         self.depth += self.aim * amount
 
     def down(self, amount):
@@ -20,22 +39,18 @@ class Sub:
     def up(self, amount):
         self.aim -= amount
 
-    def get_depth(self):
-        return self.depth
-
-    def get_position(self):
-        return self.position
-
 
 def main():
     commands = [line.rstrip().split(' ') for line in sys.stdin.readlines()]
-    sub = Sub()
-    for c in commands:
-        getattr(sub, c[0])(int(c[1]))
+    subs = [Sub('part 1'), Collins('part 2')]
 
-    pos = sub.get_position()
-    depth = sub.get_depth()
-    print(f'Sub position: {pos}; Sub depth: {depth}; Multiply: {pos * depth}')
+    for sub in subs:
+        for cmd in commands:
+            getattr(sub, cmd[0])(int(cmd[1]))
+        pos = sub.position
+        depth = sub.depth
+        print(
+            f'Sub name: {sub.name}; position: {sub.position} depth: {sub.depth}; Multiply: {sub.position * sub.depth}')
 
 
 if __name__ == '__main__':

@@ -43,40 +43,16 @@ def find_gamma(input):
     return gamma_value
 
 
-def find_oxygen_gen_rating(input):
+def find_rating(input, invert=False):
     our_input = input.copy()
     count = bit_count(our_input)
 
     i = 0
     while len(our_input) > 1:
-        if count[i] >= len(our_input) / 2:
+        if (count[i] >= len(our_input) / 2) != invert:
             common_bit = 1
         else:
             common_bit = 0
-
-        new_input = []
-        for line in our_input:
-            if line[i] == common_bit:
-                new_input.append(line)
-            else:
-                bit_count_subtract(count, line)
-
-        our_input = new_input
-        i += 1
-
-    return bit_line_to_dec(our_input[0])
-
-
-def find_co2_rating(input):
-    our_input = input.copy()
-    count = bit_count(our_input)
-
-    i = 0
-    while len(our_input) > 1:
-        common_bit = 0
-        half_length = len(our_input) / 2
-        if count[i] < half_length:
-            common_bit = 1
 
         new_input = []
         for line in our_input:
@@ -96,8 +72,8 @@ def main():
 
     gamma = find_gamma(input)
     epsilon = (2 ** len(input[0]) - 1) ^ gamma
-    oxygen = find_oxygen_gen_rating(input)
-    co2 = find_co2_rating(input)
+    oxygen = find_rating(input)
+    co2 = find_rating(input, invert=True)
     print(
         f'gamma value: {gamma}; epsilon value: {epsilon}; multiply: {gamma * epsilon}')
     print(f'oxygen: {oxygen}; co2: {co2}; multiply: {oxygen * co2}')

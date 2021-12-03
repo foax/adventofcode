@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys
+import fileinput
 
 
 def bit_count(input):
@@ -66,10 +66,14 @@ def find_rating(input, invert=False):
     return our_input[0]
 
 
+def load_input(iterator, func=lambda x: x):
+    return [func(line) for line in iterator]
+
+
 def main():
 
     # input is a list of integers, converted from binary strings
-    input = [int(line.rstrip(), 2) for line in sys.stdin.readlines()]
+    input = load_input(fileinput.input(), lambda x: int(x.rstrip(), 2))
 
     gamma = find_gamma(input)
     # epsilon is just the inverse of gamma, so do a bitwise xor against

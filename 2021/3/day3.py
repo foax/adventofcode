@@ -6,18 +6,27 @@ import sys
 def bit_count(input):
     '''Count the 1's and 0's in each index.'''
 
-    count = {x: 0 for x in range(0, len(input[0]))}
-    for line in input:
-        for i, x in enumerate(line):
-            count[i] += x
+    count = {}
+    for x in input:
+        mask = 1
+        while mask <= x:
+            if x & mask:
+                if mask not in count:
+                    count[mask] = 1
+                else:
+                    count[mask] += 1
+            mask = mask << 1
     return count
 
 
-def bit_count_subtract(count, line):
+def bit_count_subtract(count, x):
     '''Subtract a line of bits from a bit count.'''
 
-    for i, x in enumerate(line):
-        count[i] -= x
+    mask = 1
+    while mask <= x:
+        if x & mask:
+            count[mask] -= 1
+        mask = mask << 1
 
 
 def bit_line_to_dec(line):
@@ -31,47 +40,50 @@ def bit_line_to_dec(line):
 
 
 def find_gamma(input):
-
     input_len = len(input)
-    line_len = len(input[0])
     count = bit_count(input)
+    max_bit = max(count.keys())
     gamma_value = 0
 
-    for i in range(0, line_len):
-        if count[i] > input_len // 2:
-            gamma_value += (2 ** (line_len - 1 - i))
+    x = 1
+    while x <= max_bit:
+        if count[x] > input_len / 2:
+            gamma_value += x
+        x = x << 1
+
     return gamma_value
 
 
 def find_rating(input, invert=False):
+
     our_input = input.copy()
     count = bit_count(our_input)
 
-    i = 0
+    mask = max(count.keys())
     while len(our_input) > 1:
-        if (count[i] >= len(our_input) / 2) != invert:
-            common_bit = 1
-        else:
-            common_bit = 0
-
+        count_bit = (count[mask] >= len(our_input) / 2) != invert
         new_input = []
-        for line in our_input:
-            if line[i] == common_bit:
-                new_input.append(line)
+        for x in our_input:
+            if (x & mask > 0) == count_bit:
+                new_input.append(x)
             else:
-                bit_count_subtract(count, line)
+                bit_count_subtract(count, x)
 
         our_input = new_input
-        i += 1
+        mask = mask >> 1
 
-    return bit_line_to_dec(our_input[0])
+    return our_input[0]
 
 
 def main():
-    input = [[int(x) for x in line.rstrip()] for line in sys.stdin.readlines()]
+
+    # input is a list of integers, converted from binary strings
+    input = [int(line.rstrip(), 2) for line in sys.stdin.readlines()]
 
     gamma = find_gamma(input)
-    epsilon = (2 ** len(input[0]) - 1) ^ gamma
+    # epsilon is just the inverse of gamma, so do a bitwise xor against
+    # the mask that covers the highest number of bits in our input
+    epsilon = (2 ** (max(input) - 1).bit_length() - 1) ^ gamma
     oxygen = find_rating(input)
     co2 = find_rating(input, invert=True)
     print(

@@ -4,7 +4,9 @@ import sys
 
 
 def bit_count(input):
-    '''Count the 1's and 0's in each index.'''
+    '''Count how many occurences a bit is present in a list of numbers.
+
+    Returns a dict of { bitmask: count }'''
 
     count = {}
     for x in input:
@@ -20,23 +22,13 @@ def bit_count(input):
 
 
 def bit_count_subtract(count, x):
-    '''Subtract a line of bits from a bit count.'''
+    '''Subtract bits from a bit count.'''
 
     mask = 1
     while mask <= x:
         if x & mask:
             count[mask] -= 1
         mask = mask << 1
-
-
-def bit_line_to_dec(line):
-    '''Convert a bit line do decimal.'''
-
-    value = 0
-    line_len = len(line)
-    for i in range(0, line_len):
-        value += (2 ** (line_len - 1 - i)) * line[i]
-    return value
 
 
 def find_gamma(input):
@@ -55,7 +47,6 @@ def find_gamma(input):
 
 
 def find_rating(input, invert=False):
-
     our_input = input.copy()
     count = bit_count(our_input)
 

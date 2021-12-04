@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys
+import fileinput
 
 
 class Sub:
@@ -21,6 +21,10 @@ class Sub:
     def up(self, amount):
         self.depth -= amount
 
+    def do_commands(self, commands):
+        for cmd in commands:
+            getattr(self, cmd[0])(int(cmd[1]))
+
 
 class Collins(Sub):
     '''Cutting edge technology, for its day. Now supports aiming.'''
@@ -40,15 +44,17 @@ class Collins(Sub):
         self.aim -= amount
 
 
+def load_input(iterator, func=lambda x: x):
+    return [func(line) for line in iterator]
+
+
 def main():
-    commands = [line.rstrip().split(' ') for line in sys.stdin.readlines()]
+
+    commands = load_input(fileinput.input(), lambda x: x.rstrip().split(' '))
     subs = [Sub('part 1'), Collins('part 2')]
 
     for sub in subs:
-        for cmd in commands:
-            getattr(sub, cmd[0])(int(cmd[1]))
-        pos = sub.position
-        depth = sub.depth
+        sub.do_commands(commands)
         print(
             f'Sub name: {sub.name}; position: {sub.position} depth: {sub.depth}; Multiply: {sub.position * sub.depth}')
 

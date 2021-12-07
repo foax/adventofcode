@@ -5,12 +5,12 @@ def load_input(iterator, func=lambda x: x):
     return [func(line) for line in iterator]
 
 
-def spawn_lanternfish(seed, max_days, internal_timer=7, extra_days=2):
+def spawn_lanternfish(seed, days, internal_timer=7, extra_days=2):
 
     max_size = internal_timer + extra_days
-    fish_count = [seed.count(x) for x in range(internal_timer + extra_days)]
+    fish_count = [seed.count(x) for x in range(max_size)]
 
-    for x in range(max_days):
+    for x in range(days):
         new_count = [0] * max_size
         for fish in range(1, max_size):
             new_count[fish - 1] = fish_count[fish]

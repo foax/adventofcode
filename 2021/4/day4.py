@@ -91,10 +91,6 @@ def find_winners(bingo_numbers, bingo_cards, bingo_card_numbers):
             sum = sum_unmarked_numbers(bingo_cards[card_num])
 
             if bingo:
-                # if not last_winning_card:
-                #     print(f'BINGO! Number {number}; card number {card_num}')
-                #     print(
-                #         f'Unmarked numbers: {sum} Multiply: {number * sum}')
                 winners.append((card_num, number))
                 bingo_cards[card_num]['won'] = True
     return winners

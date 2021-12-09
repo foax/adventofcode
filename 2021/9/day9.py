@@ -1,76 +1,83 @@
 import fileinput
-from collections import Counter
-from pprint import pprint
+
+
+class Point:
+    def __init__(self, height, up=None, down=None, left=None, right=None):
+        self.height = height
+        self.up = up
+        self.down = down
+        self.left = left
+        self.right = right
+
+    def __str__(self):
+        return str(self.height)
+
+    def neighbours(self):
+        n = set()
+        for dir in ('up', 'down', 'left', 'right'):
+            if getattr(self, dir):
+                n.add(getattr(self, dir))
+        return n
+
+    def high_neighbours(self):
+        return set([p for p in self.neighbours() if p.height > self.height])
+
+    def get_basin(self, threshold=9):
+        basin = set()
+        if self.height < threshold:
+            basin.add(self)
+        for point in self.high_neighbours():
+            basin |= point.get_basin(threshold=threshold)
+        return basin
+
+
+class Heightmap:
+    def __init__(self, lines):
+        self.points = []
+        for x, line in enumerate(lines):
+            self.points.append([])
+            for y, height in enumerate(line):
+                p = Point(int(height))
+                self.points[-1].append(p)
+                if y > 0:
+                    p.left = self.points[x][y - 1]
+                    p.left.right = p
+                if x > 0:
+                    p.up = self.points[x - 1][y]
+                    p.up.down = p
+
+    def __str__(self):
+        x = ''
+        for line in self.points:
+            for point in line:
+                x += str(point)
+            x += '\n'
+        return x
+
+    def __iter__(self):
+        for line in self.points:
+            for point in line:
+                yield point
 
 
 def load_input(iterator, func=lambda x: x):
     return [func(line) for line in iterator]
 
 
-def find_high_neighbours(i, j, input, find_basins=False, basin_threshold=9):
-    '''Returns a list of neighbours that are greater in value than the current point.
-    Returns a list of sets of (neighbour_value, x, y)'''
-
-    line_len = len(input[0])
-    line_count = len(input)
-    neighbours = set()
-    self = input[i][j]
-
-    for x, y in ((i-1, j), (i, j-1), (i, j+1), (i+1, j)):
-        if x < 0 or x >= line_count:
-            continue
-        if y < 0 or y >= line_len:
-            continue
-        neighbour = input[x][y]
-        if find_basins and neighbour >= basin_threshold:
-            continue
-        if neighbour > self:
-            new_neighbour = (neighbour, x, y)
-            neighbours.add(new_neighbour)
-            if find_basins:
-                neighbours |= find_high_neighbours(
-                    x, y, input, find_basins, basin_threshold)
-    return neighbours
-
-
 def main():
     input = load_input(fileinput.input(), lambda x: [
                        int(y) for y in x.strip()])
-    # print(input)
 
-    line_len = len(input[0])
-    line_count = len(input)
-
-    # Part 1
+    heightmap = Heightmap(input)
     low_points = []
-    for i, line in enumerate(input):
-        for j, num in enumerate(line):
-            neighbours = find_high_neighbours(i, j, input)
-            # print(i, j, input[i][j], neighbours)
-            num_neighbours = 4
-            for x, y in ((i-1, j), (i, j-1), (i, j+1), (i+1, j)):
-                if x < 0 or x >= line_count:
-                    num_neighbours -= 1
-                if y < 0 or y >= line_len:
-                    num_neighbours -= 1
+    for point in heightmap:
+        if len(point.neighbours()) == len(point.high_neighbours()):
+            low_points.append(point)
 
-            if len(neighbours) == num_neighbours:
-                # print('found lower number')
-                low_points.append((num, (i, j)))
+    print(f'Sum of risk levels: {sum([x.height + 1 for x in low_points])}')
 
-    # print(low_points)
-    print(f'risk level sum: {sum([x[0]+1 for x in low_points])}')
-
-    # Part 2
-    basins = []
-    for num, coords in low_points:
-        basins.append((num, coords, find_high_neighbours(
-            coords[0], coords[1], input, find_basins=True)))
-
-    basin_sizes = sorted([len(x[2]) + 1 for x in basins])
-
-    # pprint(basins)
-    # print(basin_sizes)
+    basins = [p.get_basin() for p in low_points]
+    basin_sizes = sorted([len(x) for x in basins])
     print(
         f'3 largest basin sizes multiplied: {basin_sizes[-1] * basin_sizes[-2] * basin_sizes[-3]}')
 

@@ -67,8 +67,7 @@ def main():
         basins.append((num, coords, find_high_neighbours(
             coords[0], coords[1], input, find_basins=True)))
 
-    basins.sort(key=lambda x: len(x[2]))
-    basin_sizes = [len(x[2]) + 1 for x in basins]
+    basin_sizes = sorted([len(x[2]) + 1 for x in basins])
 
     # pprint(basins)
     # print(basin_sizes)

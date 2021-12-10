@@ -27,8 +27,9 @@ def play_memory_game(starting_numbers, until):
 
 def main():
     starting_numbers = load_input(fileinput.input(), func=parse_line)[0]
-    print(play_memory_game(starting_numbers, 2020))
-
+    part_1 = play_memory_game(starting_numbers, 2020)
+    part_2 = play_memory_game(starting_numbers, 30000000)
+    print(f'part 1: {part_1}; part_2: {part_2}')
 
 if __name__ == '__main__':
     main()

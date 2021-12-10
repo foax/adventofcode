@@ -1,9 +1,6 @@
 import fileinput
 from collections import Counter
 
-starting_chunks = '([{<'
-ending_chunks = ')]}>'
-
 chunks = {
     '(': ')',
     '[': ']',
@@ -24,13 +21,7 @@ def load_input(iterator, func=lambda x: x):
 
 
 def incomplete_chunk_score(stack):
-    points = {
-        '(': 1,
-        '[': 2,
-        '{': 3,
-        '<': 4
-    }
-
+    points = {'(': 1, '[': 2, '{': 3, '<': 4}
     score = 0
     for x in stack:
         score = score * 5 + points[x]
@@ -40,7 +31,7 @@ def incomplete_chunk_score(stack):
 def main():
     lines = load_input(fileinput.input(), lambda x: x.strip())
 
-    illegal_chars = []
+    syntax_error_score = 0
     incomplete_stacks = []
     for line in lines:
         chunk_stack = []
@@ -52,25 +43,21 @@ def main():
             if x == chunks[start_chunk]:
                 # found matching chunk
                 continue
-            else:
-                # found illegal character
-                illegal_chars.append(x)
-                chunk_stack = []
-                break
+
+            # found illegal character
+            syntax_error_score += chunk_points[x]
+            chunk_stack = None
+            break
 
         if chunk_stack:
-            # print(f'line {line} is incomplete. Stack: {chunk_stack}')
-            incomplete_stacks.append(reversed(chunk_stack))
+            chunk_stack.reverse()
+            incomplete_stacks.append(incomplete_chunk_score(chunk_stack))
 
-    illegal_char_count = Counter(illegal_chars)
-    syntax_error_score = sum([chunk_points[chunk] * count for chunk,
-                              count in illegal_char_count.items()])
     print(f'Syntax error score: {syntax_error_score}')
 
-    scores = sorted([incomplete_chunk_score(stack)
-                    for stack in incomplete_stacks])
-    # print(scores)
-    print(f'Incomplete middle score: {scores[len(scores) // 2]}')
+    middle_score = sorted(incomplete_stacks)[len(incomplete_stacks) // 2]
+    print(
+        f'Incomplete middle score: {middle_score}')
 
 
 if __name__ == '__main__':

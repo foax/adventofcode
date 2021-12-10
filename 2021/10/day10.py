@@ -1,5 +1,4 @@
 import fileinput
-from collections import Counter
 
 chunks = {
     '(': ')',

@@ -27,48 +27,48 @@ def load_input(iterator, func=lambda x: x):
     return [func(line) for line in iterator]
 
 
-def count_lowers(path):
-    return Counter([x for x in path if x.name.islower()])
+def check_small_cave_occurrences(caves, small_cave_allowed_count):
+    '''Checks if the list of caves meets the small cave count requirements.'''
+
+    small_cave_counter = Counter([x for x in caves if x.name.islower()])
+    small_cave_occurrences = Counter(small_cave_counter.values())
+    for small_cave_count, occurences in small_cave_occurrences.items():
+        if small_cave_count not in small_cave_allowed_count:
+            return False
+        if small_cave_allowed_count[small_cave_count] == 'any':
+            continue
+        if occurences > small_cave_allowed_count[small_cave_count]:
+            return False
+    return True
 
 
-def traverse_path(cave, until, caves_traversed):
+def traverse_path(cave, until, small_cave_allowed_count, caves_traversed):
+    '''Traverse all possible paths starting from cave and ending at until.
+
+    Returns a list of paths that were successully traversed.'''
+
     # list of list of paths traversed
     paths_traversed = []
     # list of paths traversed for current working set
     caves_traversed.append(cave)
+
     for c in cave.links:
         caves = caves_traversed.copy()
-        if c == until:
-            caves.append(until)
-            paths_traversed.append(caves)
-        if c.name.isupper() or c not in caves:
-            new_paths = traverse_path(c, until, caves)
-            if new_paths:
-                paths_traversed.extend(new_paths)
-    return paths_traversed
 
-
-def traverse_path_2(cave, until, caves_traversed):
-    # list of list of paths traversed
-    paths_traversed = []
-    # list of paths traversed for current working set
-    caves_traversed.append(cave)
-    for c in cave.links:
-        caves = caves_traversed.copy()
         if c == caves[0]:
+            # path back to the start is not allowed.
             continue
+
         if c == until:
+            # We found the end! Better keep this path.
             caves.append(until)
             paths_traversed.append(caves)
             continue
-        lower_cave_count = count_lowers(caves[1:] + [c])
-        lower_cave_occurences = Counter(lower_cave_count.values())
-        # print(f'caves: {caves}')
-        # print(f'lower_cave_count: {lower_cave_count}')
-        # print(f'lower_caves_occurences: {lower_cave_occurences}')
 
-        if c.name.isupper() or (lower_cave_occurences[3] == 0 and lower_cave_occurences[2] <= 1):
-            new_paths = traverse_path_2(c, until, caves)
+        if c.name.isupper() or check_small_cave_occurrences(caves + [c], small_cave_allowed_count):
+            # Recursion ftw
+            new_paths = traverse_path(
+                c, until, small_cave_allowed_count, caves)
             if new_paths:
                 paths_traversed.extend(new_paths)
     return paths_traversed
@@ -85,14 +85,12 @@ def main():
 
         all_caves[links[0]].linkto(all_caves[links[1]])
 
-    # list of list of cave names
-    paths_traversed = traverse_path(all_caves['start'], all_caves['end'], [])
-    # pprint(paths_traversed)
+    paths_traversed = traverse_path(
+        all_caves['start'], all_caves['end'], {1: 'any'}, [])
     print(f'part 1: {len(paths_traversed)}')
 
-    paths_traversed_2 = traverse_path_2(
-        all_caves['start'], all_caves['end'], [])
-    # pprint(paths_traversed_2)
+    paths_traversed_2 = traverse_path(
+        all_caves['start'], all_caves['end'], {1: 'any', 2: 1}, [])
     print(f'part 2: {len(paths_traversed_2)}')
 
 

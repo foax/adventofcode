@@ -49,21 +49,12 @@ def sum_unmarked_numbers(bingo_card):
     return count
 
 
-def main():
-
-    # List of bingo numbers given by first line of input
-    bingo_numbers = None
-    # List of bingo cards, populated when reading input
-    bingo_cards = []
-    # A dict to track which cards have a given bingo number for quick lookup.
-    # bingo_card_numbers[bingo_number][card_num] = (x, y)
-    bingo_card_numbers = {}
+def load_bingo_input(bingo_numbers, bingo_cards, bingo_card_numbers, input_file=None):
 
     bingo_line_count = 0
-
-    for line in fileinput.input():
+    for line in fileinput.input(input_file):
         if not bingo_numbers:
-            bingo_numbers = [int(x) for x in line.rstrip().split(',')]
+            bingo_numbers.extend([int(x) for x in line.rstrip().split(',')])
         elif line.rstrip() == '':
             continue
         else:
@@ -82,7 +73,11 @@ def main():
             bingo_cards[-1]['numbers'].append(bingo_line)
             bingo_line_count = (bingo_line_count + 1) % 5
 
-    last_winning_card = None
+
+def find_winners(bingo_numbers, bingo_cards, bingo_card_numbers):
+
+    winners = []
+    # last_winning_card = None
     bingo = False
     for number in bingo_numbers:
         if number not in bingo_card_numbers:
@@ -96,16 +91,28 @@ def main():
             sum = sum_unmarked_numbers(bingo_cards[card_num])
 
             if bingo:
-                if not last_winning_card:
-                    print(f'BINGO! Number {number}; card number {card_num}')
-                    print(
-                        f'Unmarked numbers: {sum} Multiply: {number * sum}')
-                last_winning_card = (card_num, number)
+                winners.append((card_num, number))
                 bingo_cards[card_num]['won'] = True
+    return winners
 
-    sum = sum_unmarked_numbers(bingo_cards[last_winning_card[0]])
-    print(
-        f'The last winning card was {last_winning_card[0]}; bingo number was {last_winning_card[1]}; unmarked numbers sum: {sum}; multiply: {last_winning_card[1] * sum}')
+
+def main():
+
+    # List of bingo numbers given by first line of input
+    bingo_numbers = []
+    # List of bingo cards, populated when reading input
+    bingo_cards = []
+    # A dict to track which cards have a given bingo number for quick lookup.
+    # bingo_card_numbers[bingo_number][card_num] = (x, y)
+    bingo_card_numbers = {}
+
+    load_bingo_input(bingo_numbers, bingo_cards, bingo_card_numbers)
+    winners = find_winners(bingo_numbers, bingo_cards, bingo_card_numbers)
+
+    for x in (1, len(winners)):
+        sum = sum_unmarked_numbers(bingo_cards[winners[x-1][0]])
+        print(
+            f'Winner {x}: Bingo number {winners[x-1][1]}; sum of unmarked numbers: {sum}; multiply: {winners[x-1][1] * sum}')
 
 
 if __name__ == '__main__':

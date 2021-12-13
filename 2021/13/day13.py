@@ -1,43 +1,32 @@
 import fileinput
 import re
 
-def load_input(iterator, func=lambda x: x):
-    return [func(line) for line in iterator]
-
-def fold_paper(paper, fold):
+def fold_paper(paper, axis, fold_pos):
     new_paper = set()
-    idx = {'x': 0, 'y': 1}[fold[0]]
+    idx = {'x': 0, 'y': 1}[axis]
     for coord in paper:
-        if coord[idx] == fold[1]:
+        if coord[idx] == fold_pos:
             continue
         new_coord = list(coord)
-        new_coord[idx] = abs(fold[1] - coord[idx]) - 1
-        print(f'{coord} --> {tuple(new_coord)}')
+        new_coord[idx] = abs(fold_pos - coord[idx]) - 1
+        # print(f'{coord} --> {tuple(new_coord)}')
         new_paper.add(tuple(new_coord))
     return new_paper
 
 def paper_str(paper):
-    max = [0, 0]
+    extents = []
+    for i in (0,1):
+        extents.append(max([x[i] for x in paper]))
+
+    s = [['.' for x in range(extents[0] + 1)] for y in range(extents[1] + 1)]
     for coord in paper:
-        for i in range(2):
-            if coord[i] > max[i]:
-                max[i] = coord[i]
-    
-    s = ''
-    for y in range(max[1] + 1):
-        for x in range(max[0] + 1):
-            if (x, y) in paper:
-                s += '#'
-            else:
-                s += '.'
-        s += '\n'
-    return s
+        s[coord[1]][coord[0]] = '#'
+    return '\n'.join([''.join(x) for x in s])
 
 
 def main():
     paper = set()
     folds = None
-
 
     for line in fileinput.input():
         if folds == None:
@@ -52,7 +41,7 @@ def main():
 
 
     for fold in folds:
-        paper = fold_paper(paper, fold)
+        paper = fold_paper(paper, *fold)
 
     print(paper_str(paper))
 

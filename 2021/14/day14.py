@@ -1,65 +1,51 @@
 import fileinput
-from collections import Counter
+from collections import Counter, defaultdict
 
 
-class ListItem():
-    def __init__(self, value):
-        self.value = value
-        self.next = None
-
-
-def insert_elements(start, rules):
-    cur = start
-    while cur.next:
-        pair = cur.value + cur.next.value
+def polymer_step(count, rules):
+    new_counts = Counter()
+    for pair, pair_count in count.items():
         if pair in rules:
-            p = ListItem(rules[pair])
-            p.next = cur.next
-            cur.next = p
-            cur = cur.next
-        cur = cur.next
+            for new_pair in rules[pair]:
+                new_counts[new_pair] += pair_count
+    return new_counts
 
 
-def convert_to_list(start):
-    l = []
-    cur = start
-    while cur:
-        l.append(cur.value)
-        cur = cur.next
-    return l
+def solve_part(polymer, rules, steps):
+    pair_counts = Counter()
+    for i in range(len(polymer) - 1):
+        pair_counts[polymer[i:i+2]] += 1
+
+    for i in range(steps):
+        pair_counts = polymer_step(pair_counts, rules)
+
+    letter_count = Counter()
+    for pair, count in pair_counts.items():
+        letter_count[pair[0]] += count
+    letter_count[polymer[-1]] += 1
+    most_common = letter_count.most_common()[0]
+    least_common = letter_count.most_common()[-1]
+
+    print(
+        f'After {steps} steps - Most common: {most_common} Least common: {least_common} Diff: {most_common[1] - least_common[1]}')
 
 
 def main():
-    polymer_template = None
-    insertion_rules = {}
+    polymer = None
+    insertion_pairs = {}
 
     for line in fileinput.input():
         if line == '\n':
             continue
-        if polymer_template == None:
-            polymer_template = list(line.strip())
+        if polymer == None:
+            polymer = line.strip()
         else:
             rule = line.strip().split(' -> ')
-            insertion_rules[rule[0]] = rule[1]
+            insertion_pairs[rule[0]] = (
+                rule[0][0] + rule[1], rule[1] + rule[0][1])
 
-    start = None
-    last = None
-    for p in polymer_template:
-        polymer = ListItem(p)
-        if not start:
-            start = polymer
-        else:
-            last.next = polymer
-        last = polymer
-
-    print(convert_to_list(start))
-    for x in range(10):
-        print(x)
-        insert_elements(start, insertion_rules)
-
-    count = Counter(convert_to_list(start)).most_common()
-    print(
-        f'Most common: {count[0]}; Least common: {count[-1]}; Difference: {count[0][1] - count[-1][1]}')
+    solve_part(polymer, insertion_pairs, 10)
+    solve_part(polymer, insertion_pairs, 40)
 
 
 if __name__ == '__main__':

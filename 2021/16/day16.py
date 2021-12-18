@@ -1,4 +1,5 @@
 import fileinput
+from functools import reduce
 
 
 def load_input(iterator):
@@ -45,20 +46,19 @@ def parse_packet(bit_gen, bit_count=0):
             print(f'got bits {bits:05b}')
             bit_count += 5
             cont = bits & 16
-            value = (value << 4) + (bits ^ 16)
+            value = (value << 4) + (bits & 15)
             print(f'new value is {value} ({bin(value)})')
-        # waste_bits = 4 - (bit_count % 4)
-        # print(f'Number of waste bits: {waste_bits}')
-        # bit_gen.send(waste_bits)
-        # bit_count += waste_bits
+
     else:
-        parsed_version, bit_count = parse_length(bit_gen, bit_count)
+        value, parsed_version, bit_count = parse_length(
+            type_id, bit_gen, bit_count)
         version += parsed_version
 
-    return version, bit_count
+    return value, version, bit_count
 
 
-def parse_length(bit_gen, bit_count):
+def parse_length(type_id, bit_gen, bit_count):
+    values = []
     version = 0
     length_type_id = bit_gen.send(1)
     print(f'Length type: {length_type_id}')
@@ -68,29 +68,48 @@ def parse_length(bit_gen, bit_count):
         bit_count += 15
         print(f'Length in bits: {length} ({length:015b})')
         while length > 0:
-            parsed_version, new_bit_count = parse_packet(bit_gen, bit_count)
+            value, parsed_version, new_bit_count = parse_packet(
+                bit_gen, bit_count)
             length = length - (new_bit_count - bit_count)
             bit_count = new_bit_count
             version += parsed_version
+            values.append(value)
 
     else:
         op_count = bit_gen.send(11)
         bit_count += 11
         print(f'Length in op count: {op_count} ({op_count:011b})')
         for _ in range(op_count):
-            parsed_version, bit_count = parse_packet(bit_gen, bit_count)
+            value, parsed_version, bit_count = parse_packet(bit_gen, bit_count)
             version += parsed_version
             print(f'Parsed op count {op_count}')
+            values.append(value)
 
-    return version, bit_count
+    print(f'type_id: {type_id}; values: {values}')
+    if type_id == 0:
+        value = sum(values)
+    elif type_id == 1:
+        value = reduce(lambda x, y: x*y, values)
+    elif type_id == 2:
+        value = min(values)
+    elif type_id == 3:
+        value = max(values)
+    elif type_id == 5:
+        value = int(values[0] > values[1])
+    elif type_id == 6:
+        value = int(values[0] < values[1])
+    elif type_id == 7:
+        value = int(values[0] == values[1])
+
+    return value, version, bit_count
 
 
 def main():
     bits = load_input(fileinput.input())
     bit_gen = next_bits(bits)
     next(bit_gen)
-    version, bit_count = parse_packet(bit_gen, 0)
-    print(version, bit_count)
+    value, version, bit_count = parse_packet(bit_gen, 0)
+    print(value, version, bit_count)
 
 
 if __name__ == '__main__':

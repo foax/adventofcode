@@ -10,11 +10,13 @@ def load_input(iterator):
 
 
 def convert_to_bits(input):
+    '''Converts a string of hex to bits.'''
     for x in input:
         yield int(x, 16)
 
 
 def next_bits(input):
+    '''A generator that returns the number of bits asked for via send.'''
     x = 0
     available_bits = 0
     bit_iterator = convert_to_bits(input)
@@ -35,38 +37,36 @@ def parse_packet(bit_gen, bit_count=0):
     bit_count += 3
     type_id = bit_gen.send(3)
     bit_count += 3
-    print(
-        f'Version: {version} ({version:03b}), Type ID: {type_id} ({type_id:03b})')
 
     if type_id == 4:
+        # Raw value
         value = 0
         cont = 1
         while cont:
             bits = bit_gen.send(5)
-            print(f'got bits {bits:05b}')
             bit_count += 5
             cont = bits & 16
             value = (value << 4) + (bits & 15)
-            print(f'new value is {value} ({bin(value)})')
 
     else:
-        value, parsed_version, bit_count = parse_length(
+        # Operator packet
+        value, parsed_version, bit_count = parse_operator(
             type_id, bit_gen, bit_count)
         version += parsed_version
 
     return value, version, bit_count
 
 
-def parse_length(type_id, bit_gen, bit_count):
+def parse_operator(type_id, bit_gen, bit_count):
     values = []
     version = 0
     length_type_id = bit_gen.send(1)
-    print(f'Length type: {length_type_id}')
     bit_count += 1
+
     if length_type_id == 0:
+        # Length specified by number of bits
         length = bit_gen.send(15)
         bit_count += 15
-        print(f'Length in bits: {length} ({length:015b})')
         while length > 0:
             value, parsed_version, new_bit_count = parse_packet(
                 bit_gen, bit_count)
@@ -76,16 +76,14 @@ def parse_length(type_id, bit_gen, bit_count):
             values.append(value)
 
     else:
+        # Length specified by operator count
         op_count = bit_gen.send(11)
         bit_count += 11
-        print(f'Length in op count: {op_count} ({op_count:011b})')
         for _ in range(op_count):
             value, parsed_version, bit_count = parse_packet(bit_gen, bit_count)
             version += parsed_version
-            print(f'Parsed op count {op_count}')
             values.append(value)
 
-    print(f'type_id: {type_id}; values: {values}')
     if type_id == 0:
         value = sum(values)
     elif type_id == 1:
@@ -108,8 +106,8 @@ def main():
     bits = load_input(fileinput.input())
     bit_gen = next_bits(bits)
     next(bit_gen)
-    value, version, bit_count = parse_packet(bit_gen, 0)
-    print(value, version, bit_count)
+    value, version, _ = parse_packet(bit_gen, 0)
+    print(f'Version sum: {version}; Value: {value}')
 
 
 if __name__ == '__main__':

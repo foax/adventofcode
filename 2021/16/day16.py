@@ -1,6 +1,5 @@
 import fileinput
 from functools import reduce
-from pprint import pprint
 
 
 def load_input(iterator):

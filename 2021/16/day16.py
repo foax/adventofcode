@@ -1,5 +1,6 @@
 import fileinput
 from functools import reduce
+from pprint import pprint
 
 
 def load_input(iterator):
@@ -32,82 +33,85 @@ def next_bits(input):
         x = x - (bits << available_bits)
 
 
-def parse_packet(bit_gen, bit_count=0):
-    version = bit_gen.send(3)
-    bit_count += 3
-    type_id = bit_gen.send(3)
-    bit_count += 3
+def parse_packet(bit_gen):
+    packet = {'bit_count': 0}
+    packet['version'] = bit_gen.send(3)
+    packet['bit_count'] += 3
+    packet['type_id'] = bit_gen.send(3)
+    packet['bit_count'] += 3
 
-    if type_id == 4:
+    if packet['type_id'] == 4:
         # Raw value
         value = 0
         cont = 1
         while cont:
             bits = bit_gen.send(5)
-            bit_count += 5
+            packet['bit_count'] += 5
             cont = bits & 16
             value = (value << 4) + (bits & 15)
+        packet['value'] = value
+        return packet
 
-    else:
-        # Operator packet
-        value, parsed_version, bit_count = parse_operator(
-            type_id, bit_gen, bit_count)
-        version += parsed_version
+    # Operator packet
+    packet['values'] = []
+    packet['length_type_id'] = bit_gen.send(1)
+    packet['bit_count'] += 1
+    packet['sub_packets'] = []
 
-    return value, version, bit_count
-
-
-def parse_operator(type_id, bit_gen, bit_count):
-    values = []
-    version = 0
-    length_type_id = bit_gen.send(1)
-    bit_count += 1
-
-    if length_type_id == 0:
+    if packet['length_type_id'] == 0:
         # Length specified by number of bits
         length = bit_gen.send(15)
-        bit_count += 15
+        packet['bit_count'] += 15
         while length > 0:
-            value, parsed_version, new_bit_count = parse_packet(
-                bit_gen, bit_count)
-            length = length - (new_bit_count - bit_count)
-            bit_count = new_bit_count
-            version += parsed_version
-            values.append(value)
+            sub_packet = parse_packet(bit_gen)
+            packet['values'].append(sub_packet['value'])
+            packet['bit_count'] += sub_packet['bit_count']
+            packet['sub_packets'].append(sub_packet)
+            length = length - sub_packet['bit_count']
 
     else:
         # Length specified by operator count
         op_count = bit_gen.send(11)
-        bit_count += 11
+        packet['bit_count'] += 11
         for _ in range(op_count):
-            value, parsed_version, bit_count = parse_packet(bit_gen, bit_count)
-            version += parsed_version
-            values.append(value)
+            sub_packet = parse_packet(bit_gen)
+            packet['values'].append(sub_packet['value'])
+            packet['bit_count'] += sub_packet['bit_count']
+            packet['sub_packets'].append(sub_packet)
 
-    if type_id == 0:
-        value = sum(values)
-    elif type_id == 1:
-        value = reduce(lambda x, y: x*y, values)
-    elif type_id == 2:
-        value = min(values)
-    elif type_id == 3:
-        value = max(values)
-    elif type_id == 5:
-        value = int(values[0] > values[1])
-    elif type_id == 6:
-        value = int(values[0] < values[1])
-    elif type_id == 7:
-        value = int(values[0] == values[1])
+    if packet['type_id'] == 0:
+        packet['value'] = sum(packet['values'])
+    elif packet['type_id'] == 1:
+        packet['value'] = reduce(lambda x, y: x*y, packet['values'])
+    elif packet['type_id'] == 2:
+        packet['value'] = min(packet['values'])
+    elif packet['type_id'] == 3:
+        packet['value'] = max(packet['values'])
+    elif packet['type_id'] == 5:
+        packet['value'] = int(packet['values'][0] > packet['values'][1])
+    elif packet['type_id'] == 6:
+        packet['value'] = int(packet['values'][0] < packet['values'][1])
+    elif packet['type_id'] == 7:
+        packet['value'] = int(packet['values'][0] == packet['values'][1])
 
-    return value, version, bit_count
+    return packet
+
+
+def sum_packet_version(packet):
+    version_sum = packet['version']
+    if 'sub_packets' in packet:
+        for p in packet['sub_packets']:
+            version_sum += sum_packet_version(p)
+    return version_sum
 
 
 def main():
     bits = load_input(fileinput.input())
     bit_gen = next_bits(bits)
     next(bit_gen)
-    value, version, _ = parse_packet(bit_gen, 0)
-    print(f'Version sum: {version}; Value: {value}')
+    packet = parse_packet(bit_gen)
+    version_sum = sum_packet_version(packet)
+    print(f'Version sum: {version_sum}; Value: {packet["value"]}')
 
 
 if __name__ == '__main__':

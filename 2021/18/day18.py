@@ -1,5 +1,6 @@
 import fileinput
 import re
+from copy import deepcopy
 
 def process_pair(input):
     pair = None
@@ -112,14 +113,32 @@ def magnitude(snailfish):
             result += factor[i] * magnitude(x)
     return result
 
+def sum_snailfish(snailfishes, x, y):
+    pair = [deepcopy(snailfishes[x]), deepcopy(snailfishes[y])]
+    reduce_snailfish(pair)
+    return magnitude(pair)
+    
 
 def main():
     snailfishes = load_input(fileinput.input())
-    a = snailfishes[0]
+    a = deepcopy(snailfishes[0])
     for b in snailfishes[1:]:
-        a = [a, b]
+        a = [a, deepcopy(b)]
         reduce_snailfish(a)
-    print(f'Magnitude: {magnitude(a)}')
+    print(f'Part 1 magnitude: {magnitude(a)}')
+
+    max_magnitude = 0
+    for x in range(len(snailfishes)):
+        for y in range(len(snailfishes)):
+            if x == y:
+                continue
+            mag = sum_snailfish(snailfishes, x, y)
+            if mag > max_magnitude:
+                max_magnitude = mag
+
+    print(f'Part 2 max magnitude: {max_magnitude}')
+
+
 
 
 if __name__ == '__main__':

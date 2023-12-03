@@ -50,6 +50,8 @@ func parse_schematic_line(l string, y int) ([]schematic_data, []*part_number, []
 			}
 		}
 	}
+
+	// take care of the case where the last input character was a number
 	if new_part_number.value > 0 {
 		new_part_number.x = len(l) - len(fmt.Sprint(new_part_number.value))
 		p = append(p, new_part_number)
@@ -57,7 +59,9 @@ func parse_schematic_line(l string, y int) ([]schematic_data, []*part_number, []
 	return data, p, g
 }
 
+// checks if a part number is adjacent to a symbol in the schematic matrix
 func check_adjacent_to_symbol(p *part_number, s [][]schematic_data) bool {
+
 	num_len := len(fmt.Sprint(p.value))
 	for y := p.y - 1; y <= p.y+1; y++ {
 		if y < 0 || y >= len(s) {
@@ -78,6 +82,8 @@ func check_adjacent_to_symbol(p *part_number, s [][]schematic_data) bool {
 	return false
 }
 
+// calculates the gear ratio by multiplying two adjacent part numbers.
+// returns 0 if there are not two adjacent part numbers to multiply.
 func gear_ratio(g [2]int, s [][]schematic_data) int {
 	var last_num *part_number
 	for y := g[1] - 1; y <= g[1]+1; y++ {
@@ -102,6 +108,7 @@ func main() {
 	part_number_list := make([]*part_number, 0)
 	gear_list := make([][2]int, 0)
 	schematic := make([][]schematic_data, 0)
+
 	f := bufio.NewScanner(os.Stdin)
 	f.Split(bufio.ScanLines)
 
@@ -127,8 +134,6 @@ func main() {
 		part2_total += gear_ratio(g, schematic)
 	}
 
-	// fmt.Println(schematic)
-	// fmt.Println(part_number_list)
 	fmt.Printf("Part 1: %d\n", part1_total)
 	fmt.Printf("Part 2: %d\n", part2_total)
 

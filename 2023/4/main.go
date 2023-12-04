@@ -53,11 +53,9 @@ func main() {
 	}
 
 	card_copies := make([]int, len(all_cards))
-	fmt.Println(card_copies)
 
 	for i, c := range all_cards {
 		score := card_matches(c)
-		fmt.Println(i, c, score)
 		if score > 0 {
 			for x := i + 1; x <= i+score && x < len(all_cards); x++ {
 				card_copies[x] += 1 + card_copies[i]
